@@ -16,6 +16,12 @@ elif _platform == "win32":
     ##import pyHook
     import pyWinhook as pyHook
 
+
+def loadFile():
+    f = open("total.txt", "r")
+    return f.read() 
+
+
 class KeyCounter(QtCore.QObject):
     '''
     Create an object that counts global keyboard presses
@@ -37,6 +43,8 @@ class KeyCounter(QtCore.QObject):
 
     def macCountKey(self, event):
         eventCharAscii = ord(event._.characters)
+        
+        
         if eventCharAscii > 32 and eventCharAscii < 127:
             self.keyCount += 1
 
@@ -44,8 +52,10 @@ class KeyCounter(QtCore.QObject):
         '''
         Increment the keyCount variable if an ascii key was pressed
         '''
-        if event.Ascii > 32 and event.Ascii < 127:
-            self.keyCount += 1
+
+        # if just basic keys are of interest:
+        #if event.Ascii > 32 and event.Ascii < 127:
+        self.keyCount += 1
         return True # Don't block key handling
 
     def setupKeyCounterWin(self):
@@ -74,9 +84,11 @@ class KeyCounterGui(QtWidgets.QWidget):
 
     def initUI(self):
 
-        label = QtWidgets.QLabel('Characters Pressed')
+        label = QtWidgets.QLabel('Characters pressed:')
+        totalLabel = QtWidgets.QLabel('Total (so far):')
 
         self.counter = QtWidgets.QLabel()
+        self.total = QtWidgets.QLabel()
 
         saveButton = QtWidgets.QPushButton('Save')
         saveButton.clicked.connect(self.saveToFile)
@@ -91,10 +103,16 @@ class KeyCounterGui(QtWidgets.QWidget):
         grid.setSpacing(10)
 
         grid.addWidget(label, 1, 0)
-        grid.addWidget(self.counter, 1, 1)
-        grid.addWidget(resetButton, 2, 0)
-        grid.addWidget(saveButton, 2, 1)
-        grid.addWidget(postButton, 3, 0)
+        grid.addWidget(self.counter,1 , 1)
+ 
+        grid.addWidget(totalLabel, 2, 0)
+        grid.addWidget(self.total, 2, 1)
+
+        grid.addWidget(resetButton, 3, 0)
+        grid.addWidget(saveButton, 3, 1)
+        grid.addWidget(postButton, 4, 0)
+
+        self.total.setText(loadFile())
 
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updateCounter)
@@ -112,10 +130,25 @@ class KeyCounterGui(QtWidgets.QWidget):
         keyCount = self.keyCounter.keyCount
         self.counter.setText(str(keyCount))
 
+
+
     def saveToFile(self):
+
+        keyCount = self.keyCounter.keyCount
         with open('count.txt', 'a') as f:
-            keyCount = self.keyCounter.keyCount
-            f.write('%s, %s' % (datetime.now(), keyCount))
+            f.write('%s, %s\n' % (datetime.now(), keyCount))
+
+
+        totalCounter= loadFile()
+        if totalCounter == None:
+            totalCounter = 0
+
+        ttl = int(totalCounter)+int(keyCount)
+        ##print("Total now: ", ttl)    
+                          
+        with open('total.txt', 'w') as f2:
+            f2.write(str(ttl))
+
 
     def resetCounter(self):
         self.keyCounter.keyCount = 0
@@ -140,7 +173,15 @@ def postCountToGoogleForm(keyCount):
 def main():
     app = QtWidgets.QApplication(sys.argv)
     ex = KeyCounterGui()
-    sys.exit(app.exec())
+    
+    #sys.exit(app.exec())
+    returnCode = app.exec()
+
+    # save the counter when closing the app.
+    ex.saveToFile()
+
+    return returnCode;
+
 
 
 if __name__ == '__main__':
