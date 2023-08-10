@@ -1,12 +1,21 @@
+
 import sys
 from PyQt6 import QtWidgets, QtCore, QtWidgets
+import os.path
+
 try:
     import urllib.request as urllib2
 except ImportError:
     import urllib2
+
 import urllib
 from datetime import datetime
 from sys import platform as _platform
+
+# -----------------------------------------------
+
+TOTALFILE = "total.txt"
+
 
 if _platform == "darwin":
     from Foundation import NSObject, NSLog
@@ -18,8 +27,14 @@ elif _platform == "win32":
 
 
 def loadFile():
-    f = open("total.txt", "r")
-    return f.read() 
+
+    if os.path.exists(TOTALFILE):
+        f = open(TOTALFILE, "r")
+        return f.read() 
+    else:  ## initialize totals file if it does not exist.
+        f = open(TOTALFILE, 'a+')
+        f.write('0')
+        f.close 
 
 
 class KeyCounter(QtCore.QObject):
@@ -146,7 +161,7 @@ class KeyCounterGui(QtWidgets.QWidget):
         ttl = int(totalCounter)+int(keyCount)
         ##print("Total now: ", ttl)    
                           
-        with open('total.txt', 'w') as f2:
+        with open(TOTALFILE, 'w') as f2:
             f2.write(str(ttl))
 
 
