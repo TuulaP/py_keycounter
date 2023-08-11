@@ -16,4 +16,8 @@ pip install pyWinhook
 
 
 
+## Get it started when computer starts
+
+Windows + R  and taskschd.msc  to start task scheduler. (It might be nifty to add a .bat file (python py_keycounter.py ) , to add just that .bat file to scheduler.
+
 
